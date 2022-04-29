@@ -1,5 +1,14 @@
-# kotlin-mpp-library
+# City Search
 
-1. Clone it.
-2. edit project.yaml.
-3. run `./exec_template.sh`.
+Data and functions for a searchable list of 42,905 cities worldwide, with Lat/Lng and TimeZone.
+
+```kotlin
+val search: SearchProvider = DefaultSearchProvider()
+val results: CitySearchResult = search("Santa Rosa, Ca").first()
+println(results.name)
+
+//  > Santa Rosa
+```
+
+## Installation
+

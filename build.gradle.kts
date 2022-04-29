@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "com.meowbox"
-version = "1.0"
+version = "1.0.0"
 val mvnArtifactId = name
 
 repositories {
@@ -35,11 +35,14 @@ kotlin {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1")
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.2")
+                implementation("com.github.kittinunf.result:result:5.2.1")
             }
         }
         val commonTest by getting {
             dependencies {
                 implementation(kotlin("test"))
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.1")
+                implementation("io.kotest:kotest-assertions-core:5.2.3")
             }
         }
         val jvmMain by getting
@@ -52,8 +55,7 @@ kotlin {
 
                 implementation("androidx.test:runner:1.4.0")
                 implementation("androidx.test:rules:1.4.0")
-
-                implementation("org.robolectric:robolectric:4.7.3")
+                implementation("org.robolectric:robolectric:4.6.1")
             }
         }
     }
@@ -88,9 +90,11 @@ val resourceCopySpec = copySpec {
     rename { "citiesgz" }
 }
 
+
+
 val copyCitiesDesktop = tasks.register<Copy>("copyCitiesDesktop") {
     with(resourceCopySpec)
-    destinationDir = File("${project.projectDir}/src/desktopMain/resources")
+    destinationDir = File("${project.projectDir}/src/jvmMain/resources")
 }
 
 val copyCitiesAndroid = tasks.register<Copy>("copyCitiesAndroid") {
@@ -98,7 +102,10 @@ val copyCitiesAndroid = tasks.register<Copy>("copyCitiesAndroid") {
     destinationDir = File("${project.projectDir}/src/androidMain/res/raw")
 }
 
-tasks.named("compileKotlinMetadata").dependsOn(copyCitiesAndroid, copyCitiesDesktop)
+afterEvaluate {
+    tasks.named("jvmMainClasses").dependsOn(copyCitiesDesktop)
+    tasks.named("preBuild").dependsOn(copyCitiesAndroid, copyCitiesDesktop)
+}
 
 
 /**
@@ -107,7 +114,7 @@ tasks.named("compileKotlinMetadata").dependsOn(copyCitiesAndroid, copyCitiesDesk
 
 
 val SetupProjectPackageRepo: MavenArtifactRepository.() -> Unit = {
-    name = "GitHubPackages"
+    name = "kotlin-city-search-repo"
     url = uri("https://maven.pkg.github.com/tylergannon/kotlin-city-search")
     credentials {
         val props = Properties()

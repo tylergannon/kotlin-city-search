@@ -9,9 +9,16 @@ fun<T> tsvReader(
     transform: (List<String>) -> T
 ) = object : Iterable<T> {
     override fun iterator() = object : Iterator<T> {
-        private var nextLine = readNext()
+
+        private var nextLine: List<String>?
+        init {
+            nextLine = readNext()
+        }
+
         override fun hasNext() = nextLine != null
-        private fun readNext() = reader.readLine()?.split('\t')
+
         override fun next() = transform(nextLine!!).also { nextLine = readNext() }
+
+        private fun readNext() = reader.readLine()?.split('\t')
     }
 }
