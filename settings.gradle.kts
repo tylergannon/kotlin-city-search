@@ -13,5 +13,5 @@ pluginManagement {
         id("org.jetbrains.compose").version(extra["compose.version"] as String)
     }
 }
-rootProject.name = "{{ project.name }}"
+rootProject.name = "city-search"
 

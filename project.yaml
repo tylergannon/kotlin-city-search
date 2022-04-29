@@ -1,6 +1,6 @@
 project:
-  name: kotlin-mpp-library
-  package: com.meowbox.library
+  name: city-search
+  package: com.meowbox.citiesearch
   group: com.meowbox
   version: 1.0
 dependencies:
@@ -12,6 +12,6 @@ dependencies:
   realm_library: 0.10.2
   realm: 0.10.2
 publishing:
-  repo: https://maven.pkg.github.com/tylergannon/polestar-ephemeris
+  repo: https://maven.pkg.github.com/tylergannon/kotlin-city-search
 android:
   sdk_path: /Users/tyler/Library/Android/sdk
