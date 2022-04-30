@@ -7,16 +7,18 @@ const val RESOURCE_NAME = "citiesgz"
 
 const val NO_STATE = ""
 
-fun interface CitySearchProvider {
+interface CitySearchProvider {
     suspend operator fun invoke(query: String) : List<CitySearchResult>
     suspend fun search(query: String) = invoke(query)
 }
 fun DefaultSearchProvider(cities: List<CitySearchResult>): CitySearchProvider {
-    return CitySearchProvider { query ->
-        query.split(",", limit = 2)
-            .map(String::trim)
-            .let { result -> Pair(result[0], if (result.size > 1) result[1] else NO_STATE) }
-            .let { (city, state) -> cities.search(city, state) }
+    return object: CitySearchProvider {
+        override suspend fun invoke(query: String): List<CitySearchResult> {
+            return query.split(",", limit = 2)
+                .map(String::trim)
+                .let { result -> Pair(result[0], if (result.size > 1) result[1] else NO_STATE) }
+                .let { (city, state) -> cities.search(city, state) }
+        }
     }
 }
 suspend fun DefaultSearchProvider(context: Context) = DefaultSearchProvider(loadCitiesResource(context))

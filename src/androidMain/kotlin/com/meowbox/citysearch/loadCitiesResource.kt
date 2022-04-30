@@ -25,8 +25,6 @@ private fun loadSystemResource(context: Context): InputStream = context.resource
     )
 }
 
-private fun zorg(stream: InputStream) = runCatching { GZIPInputStream(stream) }
-    .map(GZIPInputStream::bufferedReader)
 
 actual suspend fun loadCitiesResource(context: Context) =
     runCatching { loadSystemResource(context) }

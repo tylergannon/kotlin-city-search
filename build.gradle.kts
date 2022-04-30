@@ -1,6 +1,7 @@
 @file:Suppress("UnstableApiUsage")
 
 import com.android.build.gradle.internal.tasks.factory.dependsOn
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import java.util.Properties
 
 
@@ -36,6 +37,10 @@ repositories {
     maven("https://jitpack.io")
 }
 
+afterEvaluate {
+
+}
+
 kotlin {
     jvm {
         compilations.all {
@@ -46,7 +51,13 @@ kotlin {
         }
     }
     js(IR) {
-        browser()
+        browser {
+            testTask {
+                useKarma {
+                    useFirefoxHeadless()
+                }
+            }
+        }
     }
     android {
         publishLibraryVariants = listOf("release", "debug")
@@ -65,7 +76,12 @@ kotlin {
                 implementation("io.kotest:kotest-assertions-core:5.2.3")
             }
         }
-        val jsMain by getting
+        val jsMain by getting {
+            dependencies {
+                implementation(npm("axios", "0.26.1"))
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-extensions:1.0.1-pre.332-kotlin-1.6.21")
+            }
+        }
         val jsTest by getting
 
         val jvmMain by getting

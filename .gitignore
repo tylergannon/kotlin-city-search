@@ -343,3 +343,4 @@ src/androidMain/res/raw/citiesgz
 src/desktopMain/resources/citiesgz
 local.properties
 src/jvmMain/resources/citiesgz
+src/commonMain/resources/cities.tsv
