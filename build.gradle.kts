@@ -26,7 +26,7 @@ plugins {
 }
 
 group = "com.meowbox"
-version = "1.0.10"
+version = "1.0.11"
 val mvnArtifactId = name
 
 repositories {
@@ -65,6 +65,7 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
+                implementation(kotlin("stdlib-common"))
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1")
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.2")
             }
