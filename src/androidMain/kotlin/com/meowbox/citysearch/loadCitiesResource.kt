@@ -1,8 +1,5 @@
 package com.meowbox.citysearch
 
-import com.github.kittinunf.result.Result
-import com.github.kittinunf.result.map
-import com.github.kittinunf.result.flatMap
 import com.meowbox.citysearch.app.Context
 import com.meowbox.citysearch.util.Reader
 import com.meowbox.citysearch.util.tsvReader
@@ -28,36 +25,26 @@ private fun loadSystemResource(context: Context): InputStream = context.resource
     )
 }
 
-private fun unGZipStream(stream: InputStream) = Result.of<InputStream, Throwable> { stream }
-    .map(::GZIPInputStream)
+private fun zorg(stream: InputStream) = runCatching { GZIPInputStream(stream) }
     .map(GZIPInputStream::bufferedReader)
+
+actual suspend fun loadCitiesResource(context: Context) =
+    runCatching { loadSystemResource(context) }
+        .mapCatching { GZIPInputStream(it) }
+        .map { it.bufferedReader() }
+        .map(::deserializeSearchResults)
+        .getOrThrow()
+        .toList()
+
 
 private fun deserializeSearchResults(input: BufferedReader) =
     tsvReader({ input.readLine() }, transform = CitySearchResult.Companion::fromCsv)
 
 
-
-actual suspend fun loadCitiesResource(context: Context) =
-    Result.of<InputStream, Throwable> { loadSystemResource(context) }
-        .flatMap(::unGZipStream)
-        .map(::deserializeSearchResults)
-        .get()
-        .toList()
-
-fun sorkin(path: String): List<CitySearchResult> {
-    val file = File(path).inputStream()
-
-    return file.use { openStream ->
-        val reader = GZIPInputStream(openStream).bufferedReader()
-        reader.use { openedReader ->
-            deserializeSearchResults(openedReader).toList()
-        }
-    }
-}
-
 actual suspend fun loadCitiesResource(path: String) =
-    Result.of<InputStream, Throwable> { File(path).inputStream() }
-        .flatMap(::unGZipStream)
+    runCatching { File(path).inputStream() }
+        .mapCatching { GZIPInputStream(it) }
+        .map { it.bufferedReader() }
         .map(::deserializeSearchResults)
-        .get()
+        .getOrThrow()
         .toList()

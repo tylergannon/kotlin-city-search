@@ -3,6 +3,21 @@
 import com.android.build.gradle.internal.tasks.factory.dependsOn
 import java.util.Properties
 
+
+buildscript {
+    repositories {
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.20")
+        classpath("com.android.tools.build:gradle:7.0.4")
+        classpath("de.mannodermaus.gradle.plugins:android-junit5:1.8.2.0")
+    }
+}
+
+
 plugins {
     kotlin("multiplatform")
     id("com.android.library")
@@ -10,12 +25,13 @@ plugins {
 }
 
 group = "com.meowbox"
-version = "1.0.0"
+version = "1.0.10"
 val mvnArtifactId = name
 
 repositories {
     google()
     mavenCentral()
+//    privateMvnRepo("maven-repo")
     maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
     maven("https://jitpack.io")
 }
@@ -29,13 +45,17 @@ kotlin {
             useJUnitPlatform()
         }
     }
-    android()
+    js(IR) {
+        browser()
+    }
+    android {
+        publishLibraryVariants = listOf("release", "debug")
+    }
     sourceSets {
         val commonMain by getting {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1")
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.2")
-                implementation("com.github.kittinunf.result:result:5.2.1")
             }
         }
         val commonTest by getting {
@@ -45,6 +65,9 @@ kotlin {
                 implementation("io.kotest:kotest-assertions-core:5.2.3")
             }
         }
+        val jsMain by getting
+        val jsTest by getting
+
         val jvmMain by getting
         val jvmTest by getting
         val androidMain by getting
@@ -105,6 +128,13 @@ val copyCitiesAndroid = tasks.register<Copy>("copyCitiesAndroid") {
 afterEvaluate {
     tasks.named("jvmMainClasses").dependsOn(copyCitiesDesktop)
     tasks.named("preBuild").dependsOn(copyCitiesAndroid, copyCitiesDesktop)
+
+
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+        kotlinOptions {
+            freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.RequiresOptIn"
+        }
+    }
 }
 
 
@@ -113,25 +143,46 @@ afterEvaluate {
  */
 
 
-val SetupProjectPackageRepo: MavenArtifactRepository.() -> Unit = {
-    name = "kotlin-city-search-repo"
-    url = uri("https://maven.pkg.github.com/tylergannon/kotlin-city-search")
-    credentials {
-        val props = Properties()
-        props.load(rootProject.file("local.properties").bufferedReader())
 
-        fun envGet(name: String) = System.getenv(name)!!
-        username = (props["gpr.user"] ?: envGet("USERNAME")).toString()
-        password = (props["gpr.key"] ?: envGet("TOKEN")).toString()
+val privateMvnRepo: RepositoryHandler.(String) -> Unit = { repoName ->
+    maven {
+        this.name = "GitHubPackages"
+        this.url = uri("https://maven.pkg.github.com/tylergannon/$repoName")
+        credentials {
+            Properties().also { props ->
+                props.load(rootProject.file("local.properties").bufferedReader())
+                username = props["gpr.user"].toString()
+                password = props["gpr.key"].toString()
+            }
+        }
     }
 }
 
 publishing {
     repositories {
-        maven(SetupProjectPackageRepo)
+        privateMvnRepo("kotlin-city-search")
     }
 }
 
+
+afterEvaluate {
+    configure<PublishingExtension> {
+        publications.all {
+            val mavenPublication = this as? MavenPublication
+            mavenPublication?.artifactId = makeArtifactId(name)
+        }
+    }
+}
+
+configure<PublishingExtension> {
+    publications {
+        withType<MavenPublication> {
+            groupId = "com.meowbox.citysearch"
+            artifactId = makeArtifactId(name)
+            version
+        }
+    }
+}
 
 fun String.dasherize() = fold("") {acc, value ->
     if (value.isUpperCase()) {
@@ -148,22 +199,3 @@ fun makeArtifactId(name: String) =
         "$mvnArtifactId-${name.dasherize()}"
     }
 
-
-afterEvaluate {
-    configure<PublishingExtension> {
-        publications.all {
-            val mavenPublication = this as? MavenPublication
-            mavenPublication?.artifactId = makeArtifactId(name)
-        }
-    }
-}
-
-configure<PublishingExtension> {
-    publications {
-        withType<MavenPublication> {
-            groupId = "com.meowbox.fourpillars"
-            artifactId = makeArtifactId(name)
-            version
-        }
-    }
-}
